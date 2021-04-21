@@ -2,6 +2,8 @@ import random
 from functools import reduce
 import os
 
+LIFES = 7
+
 # Clear the screen
 def screen_clear():
    if os.name == 'posix':
@@ -25,9 +27,10 @@ def show_matches(letter_dict):
         return '_'
 
 # Reveals partially the generated word
-def show_word_dict(word_list_dict):
+def show_word_dict(word_list_dict, lifes):
     screen_clear()
     print("Guess the word!")
+    print("Lifes remained:", lifes)
     word_with_matches = list(map(show_matches, word_list_dict))
     print("".join(word_with_matches))
 
@@ -36,8 +39,14 @@ def win(word):
     screen_clear()
     print("You win, the word was", word.upper())
 
+# Shows the win message
+def lost(word):
+    screen_clear()
+    print("You lost all your lifes, the word was", word.upper())
+
 # Runs the game
 def run():
+    lifes = LIFES
     # Obtains a random word
     word = get_random_word()
     # Creates a list with "letter dictionaries"
@@ -48,7 +57,7 @@ def run():
     # While the user dont enter all the letters for the word, keep asking
     while characters_remain_to_match > 0:
         # Shows the word (partially)
-        show_word_dict(word_list_dict)
+        show_word_dict(word_list_dict, lifes)
         try:
             # Ask for a new letter
             character = input("Ingress a character: ")
@@ -56,13 +65,23 @@ def run():
             assert character.isalpha(), "You must digit a alpha character"
             
             # Loop in all letters and check if the character matches some of the remain letters
+            number_of_matches = 0
             for i in range(0, len(word_list_dict)):
                 if not word_list_dict[i]['matched'] and word_list_dict[i]['letter'] == character:
                     word_list_dict[i]['matched'] = True # marks the letter as matched
                     characters_remain_to_match -= 1 # decrease the number of characters remained to match the full word
+                    number_of_matches += 1
+            # if there is no match, discount a life
+            if number_of_matches == 0:
+                lifes -= 1
+            # if there is no more lifes, game over
+            if lifes == 0:
+                lost(word)
+                break
         except AssertionError as assertion_error:
             print("Error:", assertion_error.__str__()) # prints the error
-    win(word) # Finally, shows the win message
+    if lifes > 0:
+        win(word) # Finally, shows the win message
 
 
 if __name__ == '__main__':
